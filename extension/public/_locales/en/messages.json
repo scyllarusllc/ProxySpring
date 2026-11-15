@@ -1,0 +1,5 @@
+{
+  "extensionName": {"message": "ProxySpring"},
+  "extensionDescription": {"message": "Manage your proxies, route sites by domain, and diagnose connection errors."},
+  "actionTitle": {"message": "Open ProxySpring"}
+}

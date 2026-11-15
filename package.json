@@ -1,0 +1,29 @@
+{
+  "name": "proxyspring",
+  "version": "0.1.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --config vite.web.config.ts",
+    "build": "tsc --noEmit && vite build --config vite.web.config.ts && vite build --config vite.ext.config.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test shared/*.test.ts"
+  },
+  "dependencies": {
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {
+    "@types/chrome": "0.1.31",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.2",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "vite": "8.0.13"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "esbuild@0.25.12": true
+  }
+}

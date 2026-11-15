@@ -1,0 +1,5 @@
+{
+  "extensionName": {"message": "ProxySpring"},
+  "extensionDescription": {"message": "管理自有代理配置、按域名分流，并解释连接失败原因。"},
+  "actionTitle": {"message": "打开 ProxySpring"}
+}
