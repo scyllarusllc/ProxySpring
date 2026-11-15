@@ -21,7 +21,7 @@ make dev
 
 网站在 http://127.0.0.1:5173 。`/check` 查询当前出口，`/privacy` 说明数据去向。`npm run build` 生成 `dist/web` 和 `dist/extension`。在 `chrome://extensions` 加载 `dist/extension`。点击工具栏图标会打开或切到扩展标签页，里面用「连接」「配置」「检测」三个分页。
 
-扩展把配置放在 `chrome.storage.local`。打开接管后用 PAC 按域名分流；关闭接管会清除扩展写入的代理设置。本地主机名和 127.0.0.0/8 始终直连。HTTP 与 HTTPS 代理可以代填认证；SOCKS 用户名和密码只会被保存并提示 Chrome 无法发送。
+扩展提供首次配置步骤、导入预览、规则命中预览和顺序调整。连接页会核对 Chrome 是否实际使用本扩展的 PAC 设置；检测页只测试访问 getip.cloud 的路由，不代表所有保存的代理都已通过测试。扩展把配置放在 `chrome.storage.local`。打开接管后用 PAC 按域名分流；关闭接管会清除扩展写入的代理设置。本地主机名和 127.0.0.0/8 始终直连。HTTP 与 HTTPS 代理可以代填认证；SOCKS 用户名和密码只会被保存并提示 Chrome 无法发送。
 
 ## 产品定位
 

@@ -192,7 +192,7 @@ export function buildPac(settings: Settings): string {
         break;
       }
       const base = rule.pattern.startsWith('*.') ? rule.pattern.slice(2) : rule.pattern;
-      lines.push(`  if (dnsDomainIs(host, ${pacString(base)}) || host === ${pacString(base)}) return ${pacString(token)};`);
+      lines.push(`  if (host === ${pacString(base)} || dnsDomainIs(host, ${pacString('.'+base)})) return ${pacString(token)};`);
     }
     const fallback = settings.defaultProfileId === 'direct' ? null : profileById(settings, settings.defaultProfileId);
     lines.push(`  return ${pacString(fallback ? pacToken(fallback) : 'DIRECT')};`);

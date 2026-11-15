@@ -2,7 +2,7 @@
   --cream: #faf8f2;
   --paper: #fffefa;
   --ink: #263c32;
-  --muted: #889087;
+  --muted: #596b5d;
   --green: #587c60;
   --line: #e8e8dd;
   --soft: #eff2e8;
@@ -44,7 +44,7 @@ nav a.active { color: var(--ink); }
 .eyebrow { font-size: 10px; letter-spacing: 1.8px; color: #8c9b81; font-weight: 650; }
 h1.display { font: 400 clamp(40px, 6vw, 68px)/1.05 var(--serif); letter-spacing: -2px; margin: 16px 0; }
 h1.display em { color: #7d9874; font-style: italic; }
-.lede { max-width: 620px; color: #91988c; line-height: 1.7; font-size: 14px; }
+.lede { max-width: 620px; color: #536457; line-height: 1.7; font-size: 14px; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
 .button {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -52,16 +52,16 @@ h1.display em { color: #7d9874; font-style: italic; }
 }
 .button.primary { background: var(--green); color: white; }
 .button.primary:hover:not(:disabled) { background: #466a4e; }
-.button.secondary { border: 1px solid #dce2d2; background: var(--paper); color: #6f7e62; }
+.button.secondary { border: 1px solid #dce2d2; background: var(--paper); color: #465a49; }
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 36px; }
 .card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 22px; }
 .card h2 { font: 24px/1.25 var(--serif); margin-bottom: 8px; }
-.card p, .note { color: #939e87; font-size: 13px; line-height: 1.75; }
+.card p, .note { color: #536457; font-size: 13px; line-height: 1.75; }
 .facts { display: grid; gap: 10px; margin-top: 18px; }
 .facts div { display: grid; grid-template-columns: 140px 1fr; gap: 12px; padding-top: 10px; border-top: 1px solid #eef0e7; }
 .facts dt { font-size: 12px; color: var(--muted); }
 .facts dd { margin: 0; font-size: 13px; line-height: 1.6; }
-label { display: block; font-size: 12px; color: #73816a; margin: 12px 0 6px; }
+label { display: block; font-size: 12px; color: #4e6051; margin: 12px 0 6px; }
 input, select, textarea {
   width: 100%; border: 1px solid var(--line); background: #fcfcf7; border-radius: 7px; padding: 10px 12px;
 }

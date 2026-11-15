@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {classifyProxyError, buildPac, emptySettings, explainTab, parseProxyLine, resolve, webRtcPolicy, type Settings} from './proxy';
+import {controlFromChrome} from '../extension/src/control';
 import {compareTimezone, compareWebRtc, flagText, httpFailureMessage, loadExitReport, normalizeGetip} from './check';
 
 test('blocks non-proxied WebRTC only while takeover and the switch are on', () => {
@@ -98,4 +99,19 @@ test('loads the exit report from getip.cloud', async () => {
   assert.equal(report.source, 'getip.cloud');
   assert.equal(report.city, 'Tokyo');
   assert.deepEqual(calls, ['https://getip.cloud/json']);
+});
+
+test('PAC rules require a domain boundary, matching the preview decision', () => {
+  const settings={...emptySettings(),enabled:true,rules:[{id:'one',pattern:'example.com',profileId:'direct'}]};
+  const pac=buildPac(settings);
+  assert.match(pac,/dnsDomainIs\(host, '\.example\.com'\)/);
+  assert.doesNotMatch(pac,/dnsDomainIs\(host, 'example\.com'\)/);
+  assert.equal(resolve(settings,'notexample.com').reason.includes('No rule matched'),true);
+});
+
+test('proxy control distinguishes active, blocked and other-extension states',()=>{
+  assert.equal(controlFromChrome('controlled_by_this_extension',true),'active');
+  assert.equal(controlFromChrome('controlled_by_other_extensions',true),'controlled-elsewhere');
+  assert.equal(controlFromChrome('not_controllable',true),'blocked');
+  assert.equal(controlFromChrome('controlled_by_this_extension',false),'off');
 });
