@@ -4,9 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --config vite.web.config.ts",
-    "build": "tsc --noEmit && vite build --config vite.web.config.ts && vite build --config vite.ext.config.ts",
+    "build:css": "tailwindcss -i web/src/app.css -o app/static/css/app.css --minify",
+    "build:js": "esbuild web/src/check.ts --bundle --minify --format=iife --target=es2022 --outfile=app/static/js/check.js",
+    "vendor": "node scripts/vendor-fontawesome.mjs",
+    "build:web": "npm run vendor && npm run build:css && npm run build:js",
+    "build:ext": "vite build --config vite.ext.config.ts",
     "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && npm run build:web && npm run build:ext",
     "test": "tsx --test shared/*.test.ts"
   },
   "dependencies": {

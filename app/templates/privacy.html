@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="eyebrow">PRIVACY</p>
+<h1 class="display">Your setup stays<br><em>in this browser.</em></h1>
+<section class="card prose-sp mt-6">
+  <p>ProxySpring stores proxy addresses, usernames, passwords, routing rules, the on/off state and the last 20 proxy errors with their times locally in Chrome. Diagnostic records may contain error text returned by the browser. The extension does not send this configuration or these records to us.</p>
+  <p>When you run the exit check, the website or the extension requests your IP, region, carrier, ASN and similar details from getip.cloud. That service receives the source IP of the request; if routing is on, this reflects only the exit used to reach getip.cloud. We have not connected any VPN, proxy or Tor risk-flag data source.</p>
+  <p>The WebRTC check uses Google’s stun.l.google.com:19302 only after you press the button; the STUN service may see the connection’s source IP. Detected addresses are shown on the current page only and are not saved. No camera or microphone permission is needed.</p>
+  <p>The extension uses the proxy permission to write Chrome’s proxy settings; the privacy permission to adjust the WebRTC IP handling policy when you turn that switch on; the storage permission to keep local configuration and errors; the tabs permission to read the current site’s address and open the settings page; and the web request and authentication permissions only to supply the username and password for a matching HTTP/HTTPS proxy. These features need access to each site’s requests, but the extension does not read page content. Turning the proxy takeover off removes the proxy settings the extension wrote.</p>
+  <p>This project has no user accounts, analytics or ads. The website’s server only serves pages; it does not receive your proxy configuration or check results. Removing the extension deletes the extension data Chrome stored locally. For how third-party services handle data, see their own policies. The policy is updated as product features change; the current version is dated November 14, 2026.</p>
+</section>
+{% endblock %}

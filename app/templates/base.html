@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#587c60">
+  <meta name="description" content="Manage your own proxy setups, route by site, and understand connection check results.">
+  <title>{{ title }}</title>
+  <link rel="icon" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/vendor/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="/static/css/app.css">
+  <script defer src="https://statistics.diy/assets/statistics_diy/js/tracker.js" data-key="RE12YCF4mN1_PUWINPnucPWuPYNQA3F3_HeZbLG8M3s"></script>
+</head>
+<body class="bg-cream text-ink antialiased">
+  {% include "_header.html" %}
+  <main class="mx-auto max-w-[1040px] px-7 pb-8 pt-12">
+    {% block content %}{% endblock %}
+  </main>
+  {% include "_footer.html" %}
+  {% block scripts %}{% endblock %}
+</body>
+</html>

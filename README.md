@@ -10,16 +10,18 @@
 
 ## 本地运行
 
+网站是 FastAPI + Jinja2 模板，样式用 Tailwind CSS，图标用 Font Awesome Free（打包进 `app/static`，不走 CDN）。`/check` 的检测脚本在访问者浏览器里运行，和扩展共用 `shared/check.ts`。
+
 ```sh
-make install
+make install   # npm ci，并在 .venv 里安装 fastapi、uvicorn、jinja2
 make test
-make build
-make dev
+make build     # 类型检查，生成网站资源 app/static，并生成 dist/extension
+make dev       # 带自动重载的网站
 ```
 
-`make check` 会做类型检查和测试。等价命令是 `npm ci`、`npm test`、`npm run build` 和 `npm run dev`。
+`make check` 会做类型检查和测试。`make assets` 只重新生成网站的 CSS、脚本和 Font Awesome；这些生成文件不进 git，部署前要先跑一次。
 
-网站在 http://127.0.0.1:8081 。`/check` 查询当前出口，`/privacy` 说明数据去向。`npm run build` 生成 `dist/web` 和 `dist/extension`。在 `chrome://extensions` 加载 `dist/extension`。点击工具栏图标会打开或切到扩展标签页，里面用「连接」「配置」「检测」三个分页。
+网站在 http://127.0.0.1:8081 ，路由有 `/`、`/check`、`/privacy` 和 `/healthz`，模板在 `app/templates`。生产环境可用 `.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8081` 放在反向代理后面。在 `chrome://extensions` 加载 `dist/extension`。点击工具栏图标会打开或切到扩展标签页，里面用「连接」「配置」「检测」三个分页。
 
 扩展提供批量导入、规则命中预览和顺序调整。
 

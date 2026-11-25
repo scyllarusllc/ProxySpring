@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="eyebrow">YOUR OWN PROXIES · CHROME</p>
+<h1 class="display">Proxy setup,<br><em>made clear.</em></h1>
+<p class="lede">Save several routes, split traffic by domain, and when a connection fails, tell port, protocol, authentication, tunnel and target-site problems apart. You bring the routes; ProxySpring does not sell proxy IPs.</p>
+<div class="mt-6 flex flex-wrap gap-2.5">
+  <a class="btn btn-primary" href="/check"><i class="fa-solid fa-satellite-dish" aria-hidden="true"></i>Check my connection</a>
+  <a class="btn btn-secondary" href="https://chromewebstore.google.com/detail/proxyspring/pgghheegbabncmaogpmigcglbobfmjmg" target="_blank" rel="noopener"><i class="fa-brands fa-chrome" aria-hidden="true"></i>Install from Chrome Web Store</a>
+</div>
+<section class="mt-9 grid gap-3.5 sm:grid-cols-2">
+  {% set cards = [
+    ('fa-file-import', 'Bulk import', 'One proxy per line, just paste. Four layouts are understood: host:port:user:pass, host:port@user:pass, user:pass:host:port and user:pass@host:port. An http://, https://, socks4:// or socks5:// prefix is optional; the default is http. Chrome never sends a SOCKS username.'),
+    ('fa-bolt', 'One-click proxy after import', 'After you import or add a proxy, the first one becomes the default with a 10-second countdown: press “Proxy now” to start at once, cancel to change nothing, or let it start on its own. Once active, the status refreshes and shows the exit IP and region seen through the proxy.'),
+    ('fa-shuffle', 'Switching and routing', '“Start proxy” on the main page turns the takeover on or off. Rules match by domain, including subdomains. The popup says which rule the current site hits, and why.'),
+    ('fa-stethoscope', 'Connection diagnosis', 'From the browser’s proxy errors it tells an unreachable port, a protocol mismatch, failed authentication, a tunnel failure and a target-site problem apart. Anything that does not fit is shown as unknown.'),
+    ('fa-location-dot', 'Exit check', 'The website and the extension query getip.cloud, which provides no VPN, proxy or Tor flags. “Not detected”, “data source unavailable” and “not run” are shown separately.'),
+  ] %}
+  {% for icon, heading, body in cards %}
+  <article class="card"><h2><i class="fa-solid {{ icon }} mr-2 text-base text-green" aria-hidden="true"></i>{{ heading }}</h2><p>{{ body }}</p></article>
+  {% endfor %}
+</section>
+<section class="card mt-3.5" id="install">
+  <h2><i class="fa-solid fa-puzzle-piece mr-2 text-base text-green" aria-hidden="true"></i>Install the extension</h2>
+  <p><a class="font-semibold text-green underline underline-offset-[3px]" href="https://chromewebstore.google.com/detail/proxyspring/pgghheegbabncmaogpmigcglbobfmjmg" target="_blank" rel="noopener">Install ProxySpring from the Chrome Web Store</a> with one click. To build it yourself, run <code>npm run build</code> in the repository, open chrome://extensions, turn on Developer mode and load <code>dist/extension</code>. Then paste your proxies on the Connect page and press Import, and press Start proxy or wait for the countdown. Local addresses always connect directly. The extension only rewrites Chrome’s proxy settings after you turn the proxy on.</p>
+</section>
+{% endblock %}
