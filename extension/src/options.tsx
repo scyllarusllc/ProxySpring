@@ -1,6 +1,8 @@
 import {useEffect, useState} from 'react';
 import {authWarning, emptySettings, parseProxyLine, resolve, validatePattern, type Profile, type Rule, type Scheme, type Settings} from '../../shared/proxy';
 import {loadSettings, saveSettings} from './storage';
+import {ImportProxies} from './ImportProxies';
+import {ProxyNow} from './ProxyNow';
 import '../../shared/theme.css';
 
 const schemes: Scheme[] = ['http', 'https', 'socks4', 'socks5'];
@@ -14,19 +16,25 @@ export function SettingsPanel() {
   const [draft, setDraft] = useState({name: '', scheme: 'http' as Scheme, host: '', port: '8080', username: '', password: ''});
   const [pattern, setPattern] = useState('');
   const [ruleProfile, setRuleProfile] = useState('direct');
-  const [importText, setImportText] = useState('');
+  const [pending, setPending] = useState<{id: number; name: string} | null>(null);
+  const [fresh, setFresh] = useState<string[]>([]);
   const [message, setMessage] = useState('');
   const [loaded, setLoaded] = useState(false);
-  const [preview, setPreview] = useState<{profiles: Omit<Profile,'id'>[]; errors: string[]} | null>(null);
   const [testMessage, setTestMessage] = useState('');
   const [previewHost, setPreviewHost] = useState('');
 
   useEffect(() => { void loadSettings().then(value => { setSettings(value); setLoaded(true); }); }, []);
   useEffect(() => { if (loaded) void saveSettings(settings); }, [settings, loaded]);
 
+  function markFresh(ids: string[]) {
+    setFresh(ids);
+    setTimeout(() => setFresh([]), 2800);
+  }
+
   function addProfile(profile: Omit<Profile, 'id'>) {
     const next: Profile = {...profile, id: newId()};
     setSettings(current => ({...current, profiles: [...current.profiles, next]}));
+    markFresh([next.id]);
     return next;
   }
 
@@ -35,29 +43,11 @@ export function SettingsPanel() {
     const parsed = parseProxyLine(`${draft.scheme}://${draft.host}:${draft.port}`);
     if ('error' in parsed) { setMessage(parsed.error); return; }
     const profile = {...parsed, name: draft.name.trim() || `${parsed.host}:${parsed.port}`, username: draft.username, password: draft.password};
-    addProfile(profile);
-    setMessage(authWarning({...profile, id: ''}) || 'Saved.');
+    const added = addProfile(profile);
+    setSettings(current => ({...current, defaultProfileId: added.id}));
+    setPending({id: Date.now(), name: added.name});
+    setMessage(authWarning({...profile, id: ''}) || `Added “${profile.name}”.`);
     setDraft({name: '', scheme: draft.scheme, host: '', port: draft.port, username: '', password: ''});
-  }
-
-  function onImport() {
-    const profiles: Omit<Profile,'id'>[] = [], errors: string[] = [];
-    for (const [index,line] of importText.split(/\n/).entries()) {
-      if (!line.trim()) continue;
-      let parsed: ReturnType<typeof parseProxyLine>;
-      try { parsed = parseProxyLine(line); } catch { errors.push(`Line ${index+1}: malformed encoding`); continue; }
-      if ('error' in parsed) errors.push(`Line ${index+1}: ${parsed.error}`);
-      else profiles.push({...parsed, name: `${parsed.scheme} ${parsed.host}:${parsed.port}`});
-    }
-    setPreview({profiles,errors});
-    setMessage('Review the import before saving. Credentials are hidden in this preview.');
-  }
-
-  function confirmImport() {
-    if (!preview?.profiles.length) return;
-    setSettings(current => ({...current, profiles: [...current.profiles,...preview.profiles.map(profile=>({...profile,id:newId()}))]}));
-    setMessage(`Imported ${preview.profiles.length} profiles.`);
-    setPreview(null);setImportText('');
   }
 
   function moveRule(id: string, direction: -1 | 1) {
@@ -92,7 +82,21 @@ export function SettingsPanel() {
 
   return (
     <div>
-      <div className="card"><h2>Quick start</h2><p>1. Save a proxy. 2. Select it as default. 3. Start managing on Connection. 4. Run Check. Chrome may use another controller; confirm the status there.</p><p style={{marginTop:8}}>Chrome requests broad website access to route pages and answer HTTP proxy authentication challenges. ProxySpring does not read page content. <a href="https://proxyspring.com/privacy" target="_blank" rel="noreferrer">See what is stored locally</a>.</p></div>
+      <section className="hero-list">
+        <div className="hero-head"><h2>Your proxies</h2><span className="meta">{settings.profiles.length} saved{settings.enabled ? ' · managing on' : ''}</span></div>
+        <div className="list">
+          {settings.profiles.length === 0 ? <div className="empty-hero">No proxies yet. Paste a list below or add one by hand.</div> : null}
+          {settings.profiles.map(profile => (
+            <article className={`item${fresh.includes(profile.id) ? ' fresh' : ''}`} key={profile.id}>
+              <div><strong>{profile.name}{settings.defaultProfileId === profile.id ? <span className="badge">DEFAULT</span> : null}</strong><span className="meta">{profile.scheme}://{profile.host}:{profile.port}{profile.username ? ' · Credentials saved' : ''}</span>{authWarning(profile) ? <span className="meta">{authWarning(profile)}</span> : null}</div>
+              <div className="row" style={{marginTop: 0}}><button className="button secondary" onClick={() => useAndCheck(profile)}>Set default → Check</button><button className="button secondary" onClick={() => deleteProfile(profile)}>Delete</button></div>
+            </article>
+          ))}
+        </div>
+        {message ? <div className={`banner ${/^(Added|Rule added|Imported)/.test(message) ? 'ok' : 'warn'}`} role="status">{message}</div> : null}
+        {testMessage ? <div className="banner warn" role="status">{testMessage} <a href="#check">Open Check</a></div> : null}
+      </section>
+      <ImportProxies hero settings={settings} onChange={(next, ids) => { setSettings(next); if (ids) markFresh(ids); }}/>
       <section className="grid">
         <form className="card" onSubmit={onAdd}>
           <h2>Add proxy</h2>
@@ -103,24 +107,9 @@ export function SettingsPanel() {
           <label>Username<input value={draft.username} onChange={event => setDraft({...draft, username: event.target.value})} autoComplete="off"/></label>
           <label>Password<input type="password" value={draft.password} onChange={event => setDraft({...draft, password: event.target.value})} autoComplete="new-password"/></label>
           <div className="row"><button className="button primary" type="submit">Save proxy</button></div>
+          {pending ? <ProxyNow key={pending.id} settings={settings} name={pending.name} onChange={setSettings}/> : null}
         </form>
-        <section className="card">
-          <h2>Import proxies</h2>
-          <p>One per line, for example http://user:pass@host:8080 or socks5://host:1080.</p>
-          <label>Proxy lines<textarea value={importText} onChange={event => {setImportText(event.target.value);setPreview(null);}}/></label>
-          <div className="row"><button className="button secondary" type="button" onClick={onImport}>Preview import</button></div>
-          {preview ? <div role="status"><p>{preview.profiles.length} valid, {preview.errors.length} invalid. Passwords are hidden.</p><ul>{preview.profiles.map((profile,index)=><li key={index}>{profile.name}{authWarning({...profile,id:''})?' · SOCKS credentials cannot be sent by Chrome':''}</li>)}</ul><ul>{preview.errors.map((error,index)=><li key={index}>{error}</li>)}</ul><button className="button primary" type="button" disabled={!preview.profiles.length} onClick={confirmImport}>Save valid profiles</button></div> : null}
-        </section>
-      </section>
-      {message ? <div className="banner warn" role="status">{message}</div> : null}
-      {testMessage ? <div className="banner warn" role="status">{testMessage} <a href="#check">Open Check</a></div> : null}
-      <section className="list">
-        {settings.profiles.map(profile => (
-          <article className="item" key={profile.id}>
-            <div><strong>{profile.name}</strong><span className="meta">{profile.scheme}://{profile.host}:{profile.port}{profile.username ? ' · Credentials saved' : ''}</span>{authWarning(profile) ? <span className="meta">{authWarning(profile)}</span> : null}</div>
-            <div className="row"><button className="button secondary" onClick={() => useAndCheck(profile)}>Set default → Check</button><button className="button secondary" onClick={() => deleteProfile(profile)}>Delete</button></div>
-          </article>
-        ))}
+        <div className="card"><h2>Quick start</h2><p>1. Import or add a proxy; it becomes the default. 2. Choose Proxy now, or start managing on Connection. 3. Run Check. Chrome may use another controller; confirm the status there.</p><p style={{marginTop:8}}>Chrome requests broad website access to route pages and answer HTTP proxy authentication challenges. ProxySpring does not read page content. <a href="https://proxyspring.com/privacy" target="_blank" rel="noreferrer">See what is stored locally</a>.</p></div>
       </section>
       <form className="card" style={{marginTop: 16}} onSubmit={addRule}>
         <h2>Domain rules</h2>

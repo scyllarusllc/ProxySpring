@@ -34,14 +34,15 @@ function Home() {
         <a className="button secondary" href="#install">安装扩展</a>
       </div>
       <section className="grid">
-        <article className="card"><h2>配置与导入</h2><p>识别 http、https、socks4、socks5 地址，分开保存协议、服务器、端口和认证。SOCKS 用户名不会被 Chrome 发出。</p></article>
-        <article className="card"><h2>切换与分流</h2><p>手动切换默认配置。规则按域名匹配，包含子域名。弹出窗口写明当前网站命中哪一条，以及为什么。</p></article>
+        <article className="card"><h2>批量导入</h2><p>一行一条，直接粘贴。支持 host:port:user:pass、host:port@user:pass、user:pass:host:port、user:pass@host:port 四种写法，可加 http://、https://、socks4://、socks5:// 前缀，不写默认 http。SOCKS 用户名不会被 Chrome 发出。</p></article>
+        <article className="card"><h2>导入后一键代理</h2><p>导入或添加后，第一条自动成为默认代理，并给出 10 秒倒计时：点「立即代理」马上开启，取消则不改动，到点自动开启。生效后刷新状态，显示代理后的出口 IP 和地区。</p></article>
+        <article className="card"><h2>切换与分流</h2><p>主页上的「Start proxy」一键开启或停止接管。规则按域名匹配，包含子域名。弹出窗口写明当前网站命中哪一条，以及为什么。</p></article>
         <article className="card"><h2>连接诊断</h2><p>根据浏览器的代理错误区分端口不可达、协议不匹配、认证失败、隧道失败、目标网站异常。对不上号就标成未知。</p></article>
         <article className="card"><h2>出口检测</h2><p>网站和扩展查询 getip.cloud。它不提供 VPN、代理或 Tor 标签。未检测到、数据源不可用和未执行分开显示。</p></article>
       </section>
       <section className="card" id="install" style={{marginTop: 14}}>
         <h2>安装扩展</h2>
-        <p>在仓库运行 <code>npm run build</code>，打开 chrome://extensions，开启开发者模式，加载 <code>dist/extension</code>。本地地址始终直连。扩展只在你打开接管之后改写代理。</p>
+        <p>在仓库运行 <code>npm run build</code>，打开 chrome://extensions，开启开发者模式，加载 <code>dist/extension</code>。加载后在连接页粘贴代理并点 Import，再点 Start proxy 或等待倒计时即可。本地地址始终直连。扩展只在你开启代理之后改写 Chrome 的代理设置。</p>
       </section>
       <footer className="site-footer"><span>ProxySpring</span><span>首版面向 Chrome Manifest V3</span></footer>
     </Shell>

@@ -92,6 +92,39 @@ function validProxyHost(host: string): boolean {
   return /^[A-Za-z0-9.-]+$/.test(host) && !host.startsWith('.') && !host.endsWith('.') && !host.includes('..');
 }
 
+function safeDecode(value: string): string {
+  try { return decodeURIComponent(value); } catch { return value; }
+}
+
+function splitHostPort(value: string): {host: string; port: number} | null {
+  const match = value.match(/^(\[[0-9a-fA-F:]+\]|[^:\s]+):(\d{1,5})$/);
+  if (!match) return null;
+  const port = Number(match[2]);
+  if (port < 1 || port > 65535 || !validProxyHost(match[1])) return null;
+  return {host: match[1], port};
+}
+
+// An address looks more like a server when it is an IP or a dotted name.
+function hostScore(host: string): number {
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return 3;
+  if (host.includes('.')) return 2;
+  return 1;
+}
+
+function splitCredentials(value: string): {username: string; password: string} {
+  const colon = value.indexOf(':');
+  return {
+    username: safeDecode(colon >= 0 ? value.slice(0, colon) : value),
+    password: colon >= 0 ? safeDecode(value.slice(colon + 1)) : '',
+  };
+}
+
+/**
+ * Accepted shapes, each with an optional http(s)/socks4/socks5 scheme prefix:
+ *   host:port                 host:port:user:pass     host:port@user:pass
+ *   user:pass@host:port       user:pass:host:port     user:pass@host:port
+ * No scheme means http.
+ */
 export function parseProxyLine(line: string): Omit<Profile, 'id' | 'name'> | {error: string} {
   const raw = line.trim();
   if (!raw || raw.startsWith('#')) return {error: 'Empty line'};
@@ -103,24 +136,39 @@ export function parseProxyLine(line: string): Omit<Profile, 'id' | 'name'> | {er
     scheme = token === 'socks' ? 'socks5' : (token as Scheme);
     rest = raw.slice(schemeMatch[0].length);
   }
-  let username = '';
-  let password = '';
+  rest = rest.replace(/\/+$/, '');
+  let server: {host: string; port: number} | null = null;
+  let auth = {username: '', password: ''};
   const at = rest.lastIndexOf('@');
   if (at >= 0) {
-    const auth = rest.slice(0, at);
-    rest = rest.slice(at + 1);
-    const colon = auth.indexOf(':');
-    username = decodeURIComponent(colon >= 0 ? auth.slice(0, colon) : auth);
-    password = colon >= 0 ? decodeURIComponent(auth.slice(colon + 1)) : '';
+    const left = rest.slice(0, at);
+    const right = rest.slice(at + 1);
+    const leftServer = splitHostPort(left);
+    const rightServer = splitHostPort(right);
+    // user:pass@host:port is the default; host:port@user:pass wins only when the left side is the clearer server.
+    const leftWins = leftServer && (!rightServer || hostScore(leftServer.host) > hostScore(rightServer.host));
+    if (leftWins && leftServer) { server = leftServer; auth = splitCredentials(right); }
+    else if (rightServer) { server = rightServer; auth = splitCredentials(left); }
+    else return {error: 'Missing port'};
+  } else {
+    const parts = rest.split(':');
+    if (parts.length === 2) server = splitHostPort(rest);
+    else if (parts.length === 4) {
+      const first = splitHostPort(`${parts[0]}:${parts[1]}`);
+      const last = splitHostPort(`${parts[2]}:${parts[3]}`);
+      if (first && (!last || hostScore(first.host) >= hostScore(last.host))) { server = first; auth = {username: safeDecode(parts[2]), password: safeDecode(parts[3])}; }
+      else if (last) { server = last; auth = {username: safeDecode(parts[0]), password: safeDecode(parts[1])}; }
+    } else if (parts.length === 3) return {error: 'Unrecognized format. Use host:port:user:pass or user:pass@host:port'};
+    if (!server) {
+      if (!/:\d+$/.test(rest)) return {error: 'Missing port'};
+      const portText = rest.match(/:(\d+)$/)![1];
+      const port = Number(portText);
+      if (!Number.isInteger(port) || port < 1 || port > 65535) return {error: 'Invalid port'};
+      return {error: 'Invalid server address'};
+    }
   }
-  const portMatch = rest.match(/:(\d+)$/);
-  if (!portMatch) return {error: 'Missing port'};
-  const port = Number(portMatch[1]);
-  const host = rest.slice(0, -portMatch[0].length);
-  if (!Number.isInteger(port) || port < 1 || port > 65535) return {error: 'Invalid port'};
-  if (!validProxyHost(host)) return {error: 'Invalid server address'};
   if (!SCHEMES.has(scheme)) return {error: 'Invalid protocol'};
-  return {scheme, host, port, username, password};
+  return {scheme, host: server.host, port: server.port, username: auth.username, password: auth.password};
 }
 
 export function profileById(settings: Settings, id: string): Profile | null {

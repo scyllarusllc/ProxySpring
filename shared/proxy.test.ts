@@ -19,6 +19,24 @@ test('parses common proxy lines and socks alias', () => {
   assert.equal('error' in parseProxyLine('http://bad'), true);
 });
 
+test('parses the four credential layouts with http as default scheme', () => {
+  const expected = {scheme: 'http', host: '204.16.235.167', port: 12323, username: '14a4e19af0a79', password: 'd6ecb96ba3'};
+  for (const line of [
+    '204.16.235.167:12323:14a4e19af0a79:d6ecb96ba3',
+    '204.16.235.167:12323@14a4e19af0a79:d6ecb96ba3',
+    '14a4e19af0a79:d6ecb96ba3:204.16.235.167:12323',
+    '14a4e19af0a79:d6ecb96ba3@204.16.235.167:12323',
+  ]) assert.deepEqual(parseProxyLine(line), expected, line);
+  for (const scheme of ['https', 'socks4', 'socks5']) {
+    const parsed = parseProxyLine(`${scheme}://204.16.235.167:12323:u:p`);
+    assert.deepEqual(parsed, {...expected, scheme, username: 'u', password: 'p'});
+  }
+  assert.deepEqual(parseProxyLine('10.0.0.1:8080'), {scheme: 'http', host: '10.0.0.1', port: 8080, username: '', password: ''});
+  assert.deepEqual(parseProxyLine('proxy.example:8080:user:12345'), {scheme: 'http', host: 'proxy.example', port: 8080, username: 'user', password: '12345'});
+  assert.equal('error' in parseProxyLine('a:b:c'), true);
+  assert.equal('error' in parseProxyLine('1.2.3.4:99999'), true);
+});
+
 test('rules beat the default and local hosts stay direct', () => {
   const settings: Settings = {
     enabled: true,

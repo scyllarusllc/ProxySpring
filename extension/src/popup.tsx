@@ -36,7 +36,7 @@ function Popup() {
         <button className="button secondary" onClick={() => chrome.runtime.openOptionsPage()}>Settings</button>
       </div>
       <p className="note" style={{margin: '8px 0 12px'}}>{settings.enabled ? 'Extension is managing the proxy.' : 'Proxy management is off. System settings apply.'}</p>
-      <button className="button primary" onClick={() => patch({...settings, enabled: !settings.enabled})}>{settings.enabled ? 'Stop managing' : 'Start managing'}</button>
+      <button className={`button start-proxy${settings.enabled ? ' running' : ''}`} style={{width: '100%'}} onClick={() => patch({...settings, enabled: !settings.enabled})}><span className="dot" aria-hidden="true"/>{settings.enabled ? 'Stop proxy' : 'Start proxy'}</button>
       <section style={{marginTop: 14}}>
         <p className="eyebrow">Current site</p>
         <p style={{marginTop: 8}}>{page.label || 'No recognizable URL in this tab'}</p>

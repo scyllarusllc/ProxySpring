@@ -5,6 +5,7 @@ import {buildPac, explainTab, profileById, resolve, type Settings} from '../../s
 import {CheckPanel} from '../../shared/CheckPanel';
 import {loadErrors, loadSettings, saveSettings, type ErrorEvent} from './storage';
 import {SettingsPanel} from './options';
+import {ImportProxies} from './ImportProxies';
 import {controlMessage, readProxyControl, type ProxyControl} from './control';
 import '../../shared/theme.css';
 
@@ -37,6 +38,8 @@ function App() {
   const [errors, setErrors] = useState<ErrorEvent[]>([]);
   const [exit, setExit] = useState<IpReport | null>(null);
   const [control, setControl] = useState<ProxyControl>('unknown');
+  const [fresh, setFresh] = useState<string[]>([]);
+  const [proxied, setProxied] = useState(false);
 
   useEffect(() => {
     void loadSettings().then(setSettings);
@@ -75,6 +78,23 @@ function App() {
     void saveSettings(next);
   }
 
+  function toggleProxy() {
+    if (!settings) return;
+    patch({...settings, enabled: !settings.enabled});
+    setTimeout(() => void loadExitReport().then(setExit), 1500);
+  }
+
+  function onImported(next: Settings, ids?: string[]) {
+    patch(next);
+    if (ids) { setFresh(ids); setTimeout(() => setFresh([]), 2800); }
+  }
+
+  function onProxied(report: IpReport) {
+    setExit(report);
+    setProxied(true);
+    setTimeout(() => setProxied(false), 4000);
+  }
+
   return (
     <main className="wrap">
       <p className="eyebrow">EXTENSION</p>
@@ -86,47 +106,63 @@ function App() {
       </div>
       {tab === 'connection' ? (
         <section id="panel-connection" role="tabpanel" aria-labelledby="tab-connection">
-          <p className="eyebrow">Status</p>
-          <div className="exit-status card">
-            <span className="exit-flag" aria-hidden="true">{exit?.status === 'ok' && exit.flag ? exit.flag : '—'}</span>
-            <div>
+          <div className={`exit-status card hero-status${settings.enabled ? ' on' : ''}${proxied ? ' proxied' : ''}`}>
+            <span className={`exit-flag${proxied ? ' bounce' : ''}`} aria-hidden="true">{exit?.status === 'ok' && exit.flag ? exit.flag : '—'}</span>
+            <div className="status-main">
+              <p className="eyebrow">STATUS</p>
               <strong>{statusText}{exit?.status === 'ok' ? ` · ${exit.ip}` : ''}</strong>
               <p className="note">{exit?.status === 'ok' ? [exit.city, exit.region, exit.country].filter(Boolean).join(', ') || 'Location unavailable' : exit ? `Exit status unknown. ${exit.message || ''}` : 'Checking exit…'}</p>
               {zone?.state === 'different' ? <span className="banner danger">{zone.text}</span> : null}
-              <p className="note"><a href="https://getip.cloud/" target="_blank" rel="noreferrer">getip.cloud</a></p>
+              <p className="note" role="status">{controlMessage(control)}</p>
+            </div>
+            <div className="status-action">
+              <button className={`button start-proxy${settings.enabled ? ' running' : ''}`} disabled={!settings.enabled && settings.profiles.length === 0} onClick={toggleProxy}>
+                <span className="dot" aria-hidden="true"/>{settings.enabled ? 'Stop proxy' : 'Start proxy'}
+              </button>
+              {!settings.profiles.length ? <button className="button secondary" onClick={() => patch({...settings, enabled: true})}>Manage direct only</button> : null}
+              <a className="meta" href="https://getip.cloud/" target="_blank" rel="noreferrer">getip.cloud</a>
             </div>
           </div>
-          <p className="note" style={{marginTop: 10}} role="status">{controlMessage(control)}</p>
-          {settings.profiles.length===0 ? <div className="banner warn">Start here: 1. Add a proxy in Profiles. 2. Select it as default. 3. Start managing. 4. Check the connection.</div> : null}
-          <div className="row"><button className="button primary" disabled={!settings.enabled && settings.profiles.length===0} onClick={() => patch({...settings, enabled: !settings.enabled})}>{settings.enabled ? 'Stop managing' : 'Start managing'}</button>{!settings.profiles.length ? <><button className="button secondary" onClick={()=>open('settings')}>Add your first proxy</button><button className="button secondary" onClick={()=>patch({...settings,enabled:true})}>Manage direct only</button></> : null}</div>
-          <label style={{marginTop: 16}}>
-            <input type="checkbox" checked={settings.blockWebRtcLeak} onChange={event => patch({...settings, blockWebRtcLeak: event.target.checked})}/> Block non-proxied WebRTC UDP while managing proxy
-          </label>
-          <p className="note">When enabled, Chrome prevents WebRTC UDP from bypassing the proxy. WebRTC may use TCP or fail to connect. Turning off proxy management restores Chrome’s default policy. This does not change your time zone.</p>
-          <p className="note" style={{marginTop:12}}>Proxy access needs broad site permissions so Chrome can route websites and answer proxy authentication challenges. ProxySpring does not read page content. <a href="https://proxyspring.com/privacy" target="_blank" rel="noreferrer">Privacy details</a></p>
-          <section style={{marginTop: 18}}>
-            <p className="eyebrow">Current site</p>
-            <p style={{marginTop: 8}}>{page.label || 'No regular website in this window'}</p>
-            <p className="note">{page.reason}</p>
-          </section>
-          <section style={{marginTop: 18}}>
-            <p className="eyebrow">Default profile</p>
-            <div className="list">
-              <label className="item"><span><input type="radio" name="profile" checked={settings.defaultProfileId === 'direct'} onChange={() => patch({...settings, defaultProfileId: 'direct'})}/> Direct</span></label>
-              {settings.profiles.map(profile => (
-                <label className="item" key={profile.id}>
-                  <span><input type="radio" name="profile" checked={settings.defaultProfileId === profile.id} onChange={() => patch({...settings, defaultProfileId: profile.id})}/> {profile.name}</span>
-                  <span className="meta">{profile.scheme} {profile.host}:{profile.port}</span>
-                </label>
-              ))}
+          {settings.profiles.length === 0 ? <div className="banner warn">Start here: paste your proxies into Import below. The first becomes the default and you can proxy right away.</div> : null}
+          <div className="grid two-col">
+            <ImportProxies settings={settings} onChange={onImported} onProxied={onProxied}/>
+            <div className="stack-col">
+              <section className="card">
+                <p className="eyebrow">DEFAULT PROFILE</p>
+                <div className="list">
+                  <label className="item"><span><input type="radio" name="profile" checked={settings.defaultProfileId === 'direct'} onChange={() => patch({...settings, defaultProfileId: 'direct'})}/> Direct</span></label>
+                  {settings.profiles.map(profile => (
+                    <label className={`item${fresh.includes(profile.id) ? ' fresh' : ''}`} key={profile.id}>
+                      <span><input type="radio" name="profile" checked={settings.defaultProfileId === profile.id} onChange={() => patch({...settings, defaultProfileId: profile.id})}/> {profile.name}</span>
+                      <span className="meta">{profile.scheme} {profile.host}:{profile.port}</span>
+                    </label>
+                  ))}
+                </div>
+                {settings.profiles.length === 0 ? <p className="note">No proxies yet. <a href="#settings">Open Profiles</a></p> : null}
+              </section>
+              <section className="card">
+                <p className="eyebrow">CURRENT SITE</p>
+                <p style={{marginTop: 8}}>{page.label || 'No regular website in this window'}</p>
+                <p className="note">{page.reason}</p>
+              </section>
             </div>
-          </section>
-          <section style={{marginTop: 18}}>
-            <p className="eyebrow">Recent proxy errors</p>
-            {errors.length === 0 ? <p className="note">No errors recorded. This does not prove the proxy works.</p> : errors.slice(0, 5).map(error => (
-              <p className="note" key={error.at}>{error.title} · {error.detail}</p>
-            ))}
-          </section>
+          </div>
+          <div className="grid two-col">
+            <section className="card">
+              <p className="eyebrow">WEBRTC</p>
+              <label style={{marginTop: 8}}>
+                <input type="checkbox" checked={settings.blockWebRtcLeak} onChange={event => patch({...settings, blockWebRtcLeak: event.target.checked})}/> Block non-proxied WebRTC UDP while proxy is on
+              </label>
+              <p className="note">Chrome then prevents WebRTC UDP from bypassing the proxy. WebRTC may use TCP or fail to connect. Stopping the proxy restores Chrome’s default policy. This does not change your time zone.</p>
+            </section>
+            <section className="card">
+              <p className="eyebrow">RECENT PROXY ERRORS</p>
+              {errors.length === 0 ? <p className="note" style={{marginTop: 8}}>No errors recorded. This does not prove the proxy works.</p> : errors.slice(0, 5).map(error => (
+                <p className="note" key={error.at}>{error.title} · {error.detail}</p>
+              ))}
+            </section>
+          </div>
+          <p className="note" style={{marginTop: 16}}>Proxy access needs broad site permissions so Chrome can route websites and answer proxy authentication challenges. ProxySpring does not read page content. <a href="https://proxyspring.com/privacy" target="_blank" rel="noreferrer">Privacy details</a></p>
         </section>
       ) : null}
       {tab === 'settings' ? <section id="panel-settings" role="tabpanel" aria-labelledby="tab-settings"><SettingsPanel/></section> : null}

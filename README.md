@@ -19,9 +19,22 @@ make dev
 
 `make check` 会做类型检查和测试。等价命令是 `npm ci`、`npm test`、`npm run build` 和 `npm run dev`。
 
-网站在 http://127.0.0.1:5173 。`/check` 查询当前出口，`/privacy` 说明数据去向。`npm run build` 生成 `dist/web` 和 `dist/extension`。在 `chrome://extensions` 加载 `dist/extension`。点击工具栏图标会打开或切到扩展标签页，里面用「连接」「配置」「检测」三个分页。
+网站在 http://127.0.0.1:8081 。`/check` 查询当前出口，`/privacy` 说明数据去向。`npm run build` 生成 `dist/web` 和 `dist/extension`。在 `chrome://extensions` 加载 `dist/extension`。点击工具栏图标会打开或切到扩展标签页，里面用「连接」「配置」「检测」三个分页。
 
-扩展提供首次配置步骤、导入预览、规则命中预览和顺序调整。连接页会核对 Chrome 是否实际使用本扩展的 PAC 设置；检测页只测试访问 getip.cloud 的路由，不代表所有保存的代理都已通过测试。扩展把配置放在 `chrome.storage.local`。打开接管后用 PAC 按域名分流；关闭接管会清除扩展写入的代理设置。本地主机名和 127.0.0.0/8 始终直连。HTTP 与 HTTPS 代理可以代填认证；SOCKS 用户名和密码只会被保存并提示 Chrome 无法发送。
+扩展提供批量导入、规则命中预览和顺序调整。
+
+**导入代理**：连接页和配置页都有 Import proxies，一行一条，支持以下写法，前面可加 `http://`、`https://`、`socks4://`、`socks5://`，不写协议默认 http：
+
+```
+204.16.235.167:12323:user:pass
+204.16.235.167:12323@user:pass
+user:pass:204.16.235.167:12323
+user:pass@204.16.235.167:12323
+```
+
+导入或手动添加后，新代理自动成为默认代理，并出现 10 秒倒计时：点「Proxy now」立即开启，「Cancel」取消，到点自动开启。生效后会刷新状态，显示代理后的出口 IP。连接页的主按钮是「Start proxy / Stop proxy」。配置页顶部是已保存代理列表，新增条目有高亮动画。
+
+连接页会核对 Chrome 是否实际使用本扩展的 PAC 设置；检测页只测试访问 getip.cloud 的路由，不代表所有保存的代理都已通过测试。扩展把配置放在 `chrome.storage.local`。打开接管后用 PAC 按域名分流；关闭接管会清除扩展写入的代理设置。本地主机名和 127.0.0.0/8 始终直连。HTTP 与 HTTPS 代理可以代填认证；SOCKS 用户名和密码只会被保存并提示 Chrome 无法发送。
 
 ## 产品定位
 

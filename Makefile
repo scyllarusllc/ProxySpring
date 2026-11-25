@@ -1,4 +1,5 @@
 .DEFAULT_GOAL := help
+PORT ?= 8081
 
 NPM_STAMP := node_modules/.installed
 
@@ -6,7 +7,7 @@ NPM_STAMP := node_modules/.installed
 
 help:
 	@printf '%s\n' 'make install    Install dependencies from package-lock.json.'
-	@printf '%s\n' 'make dev        Start the website at http://127.0.0.1:5173.'
+	@printf '%s\n' 'make dev        Start the website at http://127.0.0.1:$(PORT).'
 	@printf '%s\n' 'make test       Run the proxy and checker tests.'
 	@printf '%s\n' 'make typecheck  Typecheck the website, extension and shared code.'
 	@printf '%s\n' 'make check      Run typecheck and tests.'
@@ -19,7 +20,7 @@ $(NPM_STAMP): package.json package-lock.json
 	touch $@
 
 dev: $(NPM_STAMP)
-	npm run dev
+	npm run dev -- --port $(PORT) --strictPort
 
 test: $(NPM_STAMP)
 	npm test
