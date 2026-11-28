@@ -11,7 +11,11 @@
     "build:ext": "vite build --config vite.ext.config.ts",
     "typecheck": "tsc --noEmit",
     "build": "tsc --noEmit && npm run build:web && npm run build:ext",
-    "test": "tsx --test shared/*.test.ts"
+    "test": "tsx --test shared/*.test.ts",
+    "webstore:status": "node scripts/webstore.mjs status",
+    "webstore:upload": "node scripts/webstore.mjs upload",
+    "webstore:publish": "node scripts/webstore.mjs publish",
+    "pack:crx": "node scripts/pack-crx.mjs"
   },
   "dependencies": {
     "react": "19.2.6",

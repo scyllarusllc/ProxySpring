@@ -8,3 +8,6 @@ __pycache__/
 app/static/css/app.css
 app/static/js/check.js
 app/static/vendor/
+*.pem
+!scripts/crx-public.pem
+*.crx

@@ -91,3 +91,24 @@ user:pass@204.16.235.167:12323
 优先完成代理配置、快速切换、按域名分流、基础连接诊断，以及出口 IP / ASN / 地区查询。VPN、代理和 Tor 标签在选定数据源后接入；时区及 WebRTC 检查作为后续增强功能。
 
 目标首先支持 Chrome Manifest V3。协议认证能力需遵循浏览器本身的限制，尤其不能假定扩展可以直接支持带用户名和密码的 SOCKS5 认证。
+
+## 发布到 Chrome 应用商店
+
+`scripts/webstore.mjs` 通过 Chrome Web Store API v2 上传安装包并提交审核。API 只管安装包和发布；商店文案和截图（`store-assets/screenshots`）无法通过 API 修改，需在开发者后台手动上传。
+
+一次性准备：在 Google Cloud 项目启用 Chrome Web Store API，创建 OAuth 客户端（类型选 Desktop app），授权范围为 `https://www.googleapis.com/auth/chromewebstore`，换取 refresh token。然后设置环境变量，不要提交到仓库：
+
+```sh
+export CWS_CLIENT_ID=...
+export CWS_CLIENT_SECRET=...
+export CWS_REFRESH_TOKEN=...
+```
+
+```sh
+npm run build
+npm run webstore:status    # 查看当前状态
+npm run webstore:upload    # 打包 dist/extension 并上传为草稿
+npm run webstore:publish   # 提交已上传的草稿审核
+```
+
+`node scripts/webstore.mjs upload --publish` 可一步上传并提交审核；`--zip 文件路径` 可改用已有的 zip。
